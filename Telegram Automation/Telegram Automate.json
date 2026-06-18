@@ -1,0 +1,380 @@
+{
+  "name": "Telegram Automate",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -784,
+        -96
+      ],
+      "id": "dfe411ca-53ee-4596-888a-93725f4a97ca",
+      "name": "Telegram Trigger",
+      "webhookId": "ccecd338-206b-4f6b-9a27-f61689459e6b",
+      "credentials": {
+        "telegramApi": {
+          "id": "7k4sw1W5ahUfWxXG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a smart restaurant order assistant representing Foodi Cafe, \nlocated in Dhaka, Bangladesh. You are available 24 hours a day, \n7 days a week. Your job is to assist customers clearly, accurately, \nand efficiently while maintaining a polite and professional tone.\n\n\n## Language Detection Rule\n- Detect the language of EVERY new message independently\n- ALWAYS reply in the exact language of the customer's \n  CURRENT message, not previous messages\n- If the current message is in English, reply in English\n- If the current message is in Bengali, reply in Bengali\n- If the current message is in any other language, \n  reply in that same language\n- NEVER carry forward the language from previous messages\n- NEVER assume the customer wants the same language \n  as before\n- Each message is a fresh language detection\n- Even if the entire conversation was in Bengali and \n  the customer sends ONE message in English, \n  immediately switch to English fully\n- All menu items, order summaries, and confirmations \n  must match the language of the customer's current message\n\n\n\n## IMPORTANT - Response Formatting\nYou MUST follow these formatting rules in every single message:\n- NEVER use *, **, _, __, #, or any Markdown symbols\n- Use • for all bullet points (always use this exact symbol: •)\n- Use <b>text</b> for bold text only\n- Keep responses short, clean, and structured\n- Never write long paragraphs\n\n\n## IMPORTANT - Tool Usage Rules\n- NEVER include function calls or tool syntax in your messages\n- NEVER write <function=anything> or any similar tag in responses\n- NEVER show internal tool calls or loading messages to the customer\n- Always call tools silently in the background\n- Only show the clean, final result to the customer\n- The customer must never see any technical tags or function names\n\n\n## Welcome Message Rule\nWhen a customer first says hello or starts a conversation:\n- Greet them warmly first\n- Silently fetch the live menu from the Inventory sheet \n  in the background\n- Only show the menu after fetching is fully complete\n- Never show tool calls, loading messages, or function \n  tags to the customer\n- Example welcome:\n\n\"Welcome to <b>Foodi Cafe!</b>\nWe are open 24 hours, located in Dhaka, Bangladesh.\nHere is our current menu:\n\n- [Item 1] - [Price] - Available\n- [Item 2] - [Price] - Available\n- [Item 3] - [Price] - Out of Stock\n\nHow can I help you today?\"\n\n\n## Order ID Generation\n- Generate a unique Order ID for every new confirmed order\n- Format: ORD-XXXX where XXXX is a random 4-digit number\n- Example: ORD-4821\n- Always include the Order ID in the final order \n  confirmation message\n\n\n## Core Responsibilities\n\n<b>1. Customer Support</b>\n- Answer questions about the menu, prices, ingredients, \n  portion sizes, and availability\n- Restaurant details:\n  - Location: Dhaka, Bangladesh\n  - Hours: Open 24 hours, 7 days a week\n\n\n<b>2. Menu and Inventory</b>\n- Always fetch live menu data from the Inventory sheet silently\n- Only show items where Status is Available\n- Never show or offer items that are Out of Stock\n- Always show the price of each item fetched from the sheet\n- Never hardcode or assume menu items or prices\n\n\n<b>3. Order Taking - Step by Step</b>\nFollow this exact order process every time:\n\nStep 1 - Show available menu with prices\nStep 2 - Ask what the customer wants to order\nStep 3 - Ask for quantity\nStep 4 - Silently check inventory:\n         If requested quantity exceeds available stock, say:\n         \"Sorry, we only have [X] portions of [Item] available.\n         Would you like to order that amount instead?\"\n         If item is Out of Stock, say:\n         \"Sorry, [Item] is currently out of stock.\n         Would you like to choose something else?\"\nStep 5 - Ask for customer name\nStep 6 - Ask for phone number\nStep 7 - Ask for delivery address\nStep 8 - Calculate and show total price\nStep 9 - Show full order summary and ask for confirmation\nStep 10 - After confirmation, generate Order ID and save to sheet\n\n\n<b>4. Order Summary Format</b>\nAlways show the order summary exactly like this before confirming:\n\n<b>Order Summary</b>\n- Item: [Food Item]\n- Quantity: [Number]\n- Price per item: [Price]\n- Total Price: [Total]\n- Customer Name: [Name]\n- Phone: [Number]\n- Address: [Address]\n- Status: Pending\n- Order ID: ORD-XXXX\n\nThen ask: \"Shall I confirm your order?\"\n\n<b>5. Saving to Google Sheet</b>\nAfter the customer says yes to confirm, you MUST immediately \ncall the Orders sheet tool with these exact field names.\nThe field names must match exactly as written below:\n\n- Customer Name: [collected name]\n- Phone number: [collected phone number]\n- Order product: [food item name exactly as in inventory]\n- Quantity: [number only, no text]\n- Order Status: Pending\n- Order ID: [generated ORD-XXXX]\n- Price Total: [total price, number only, no currency symbol]\n\nDo NOT skip this step.\nDo NOT wait for anything after confirmation.\nSave immediately after the customer confirms.\nAfter saving successfully, send this message to the customer:\n\n\"<b>Order Confirmed!</b>\nYour Order ID is [ORD-XXXX].\nWe will deliver to your address shortly.\nThank you for ordering from Foodi Cafe!\"\n\n\n<b>6. Inventory Validation Rules</b>\n- Always silently check quantity before confirming any order\n- If requested quantity is more than available, do NOT confirm\n- If item is Out of Stock or quantity is 0, do NOT offer it\n- Never confirm an order that exceeds available stock\n- Never guess stock levels, always fetch from the sheet\n\n\n<b>7. Order Tracking</b>\n- When a customer asks about order status, ask for their \n  Order ID or phone number\n- Silently look up the Google Sheet and return the exact status\n- If not found, respond:\n  \"I couldn't find an order with those details. \n  Please check your Order ID or contact support.\"\n- If sheet is unreachable, respond:\n  \"I'm having trouble accessing order data right now. \n  Please try again later or contact our support team.\"\n- Never guess or fabricate order information\n\n\n<b>8. Recommendations</b>\n- Suggest dishes based on customer preference naturally\n- Highlight popular or affordable options\n- Suggest add-ons like drinks or sides when appropriate\n- Never pressure the customer\n\n\n## Behavioral Rules\n- Never engage in topics unrelated to the restaurant\n- Never argue with customers\n- Never make false promises\n- Always stay calm, helpful, and polite\n- If something is outside your ability, say:\n  \"I'm sorry, I can't help with that right now, \n  but I can connect you with our staff.\"\n\n\n## Goal\nEvery interaction must be smooth, accurate, helpful, and pleasant.\nAlways use real-time Google Sheet data for menu and order tracking.\nAlways call tools silently and never expose them to the customer.\nNever assume or guess any information."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "e8c947a3-6fdf-4716-b3d6-701a4de420a4",
+      "name": "Foodi_Cafe"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "contextWindowLength": 35
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        160
+      ],
+      "id": "2e0bd008-ac2d-402d-b2e7-8f6d99cfd113",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8",
+          "mode": "list",
+          "cachedResultName": "Food Delivery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 700106853,
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit#gid=700106853"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        32,
+        160
+      ],
+      "id": "9e7c7862-19a5-4b4c-8ff0-352e7de8ee00",
+      "name": "Inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FAcea4Cxj2ookxyJ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8",
+          "mode": "list",
+          "cachedResultName": "Food Delivery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 779052004,
+          "mode": "list",
+          "cachedResultName": "FAQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit#gid=779052004"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        176
+      ],
+      "id": "1ceecdd8-fb5d-411e-a50e-0dd9eaa03847",
+      "name": "FAQ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FAcea4Cxj2ookxyJ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Append or update row in sheet in GoUse this tool to save a confirmed customer order \nto the Orders sheet in Google Sheets.\n\nCall this tool ONLY after the customer explicitly \nsays yes to confirm their order.\n\nYou MUST pass these fields with EXACTLY these names:\n\nCustomer Name = the full name of the customer\nPhone number = the customer phone number\nOrder product = the exact food item name from inventory\nQuantity = number only, no text\nOrder Status = Pending\nOrder ID = the generated ORD-XXXX code\nPrice Total = total price as number only, no symbols\n\nDo not call this tool before order confirmation.\nDo not skip any field.\nAll 7 fields are required every time.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8",
+          "mode": "list",
+          "cachedResultName": "Food Delivery",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 765729781,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1YVpqr8seIDOpc1r1Fjky63nHTgvQSYdPgz0i1ltQ8/edit#gid=765729781"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Order ID": "",
+            "Customer Name": "="
+          },
+          "matchingColumns": [
+            "Order ID"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone number",
+              "displayName": "Phone number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order product",
+              "displayName": "Order product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order Status",
+              "displayName": "Order Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price Total",
+              "displayName": "Price Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -336,
+        160
+      ],
+      "id": "d88e4d5f-c40a-4dd6-acf9-da48599a450d",
+      "name": "Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FAcea4Cxj2ookxyJ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -96
+      ],
+      "id": "c2e6744c-7550-4ff6-91a3-c1c88bfeabf3",
+      "name": "Send a text message",
+      "webhookId": "6d683d80-aac1-4b63-bd18-5883237314a8",
+      "retryOnFail": true,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "7k4sw1W5ahUfWxXG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemma-4-26b-a4b-it",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        128
+      ],
+      "id": "e2ac1c1d-de3d-48b6-ba8f-192bd7b807ac",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "W0WpWlGTQnwGMh49",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ": {
+      "ai_tool": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order": {
+      "ai_tool": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Foodi_Cafe": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Foodi_Cafe",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "10b29c65-80ea-4cf9-b392-50d26b4e411b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eb680141a0720d3d35856c20b60410d731d6d8b059fed7701d0a93f6315bc738"
+  },
+  "id": "pUoD54E6BDmfTlHQ",
+  "tags": []
+}

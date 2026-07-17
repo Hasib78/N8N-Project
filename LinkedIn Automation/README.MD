@@ -6,10 +6,10 @@
 - AI-powered responses using Gemini
 
 ## Workflow
-![Workflow](assets/LinkedIn%20Automation.JPG)
+![Workflow](LinkedIn%20Automation.JPG)
 
 ## Workflow
-![Workflow](assets/LinkedIn%20Page%20Automation.JPG)
+![Workflow](LinkedIn%20Page%20Automation.JPG)
 
 ## Tech Stack
 - n8n (workflow automation)
